@@ -7,12 +7,9 @@ repositories{
 
 dependencies {
     // 可以引用其他库
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.tools.lint:lint:26.3.2'
 
-    // gradle sdk
     implementation gradleApi()
-    // groovy sdk
     implementation localGroovy()
 }

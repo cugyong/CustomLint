@@ -14,6 +14,5 @@ public class JavaBean implements Serializable {
 
     public class A {
 
-
     }
 }

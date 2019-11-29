@@ -1,3 +1,5 @@
+package com.yong.lintcheck
+
 import com.android.tools.lint.LintCliClient
 import com.android.tools.lint.Warning
 import com.android.tools.lint.client.api.LintRequest

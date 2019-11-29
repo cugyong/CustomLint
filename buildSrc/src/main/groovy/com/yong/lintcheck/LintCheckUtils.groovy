@@ -1,6 +1,8 @@
-//import com.yong.lintrules.IssuesRegister
+import com.android.tools.lint.XmlReporter
+import com.yong.lintcheck.LintToolClient
+import com.yong.lintrules.IssuesRegister
+import com.yong.lintcheck.LintTxtReporter
 import org.gradle.api.Project
-import LintToolClient
 
 class LintCheckUtils {
 
@@ -83,28 +85,31 @@ class LintCheckUtils {
             }
             writer.write("=== lint check files list end ===\n")
 
-            if (true) {
-                //回退commit
-              //  "git reset HEAD~1".execute(null, project.getRootDir())
-            }
             /**
              * 开始扫描
              */
             def lintClient = new LintToolClient()
-//            def flags = lintClient.flags // LintCliFlags 用于设置Lint检查的一些标志
-//            // Whether lint should set the exit code of the process if errors are found
-//            flags.setExitCode = true
-//
-////            def txtReporter = new LintTxtReporter(lintClient, lintResult, writer, startIndex, endIndex)
-////            flag.reporters.add(txtReporter)
-//
-//            lintClient.run(new IssuesRegister(), files)
+            def flags = lintClient.flags // LintCliFlags 用于设置Lint检查的一些标志
+            // Whether lint should set the exit code of the process if errors are found
+            flags.setExitCode = true
+
+            //是否输出全部的扫描结果
+            if (project.lintConfig != null && project.lintConfig.lintReportAll) {
+                File outputResult = new File("lint-check-result-all.xml")
+                def xmlReporter = new XmlReporter(cl, outputResult)
+                flags.reporters.add(xmlReporter)
+            }
+
+            def txtReporter = new LintTxtReporter(lintClient, lintResult, writer, startIndex, endIndex)
+            flags.reporters.add(txtReporter)
+
+            lintClient.run(new IssuesRegister(), lintCheckFileList)
 
             //根据报告中存在的问题进行判断是否需要回退
-//            if (true) {
-//                //回退commit
-//                "git reset HEAD~1".execute(null, project.getRootDir())
-//            }
+            if (txtReporter.issueNumber > 0) {
+                //回退commit
+                "git reset HEAD~1".execute(null, project.getRootDir())
+            }
 
             writer.newLine()
             writer.newLine()

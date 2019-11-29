@@ -1,3 +1,5 @@
+package com.yong.lintcheck
+
 import org.gradle.api.GradleException
 import org.gradle.api.Project
 
