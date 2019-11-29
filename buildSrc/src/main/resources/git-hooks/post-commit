@@ -1,0 +1,7 @@
+#!/bin/sh
+
+echo "post-commit started"
+
+./gradlew lintCheck
+
+echo "post-commit finished"

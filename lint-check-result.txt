@@ -1,0 +1,12 @@
+=========== Lint check start ==============
+
+Lint check file type: .java, .xml
+
+=== git commit files list start ===
+=== git commit files list end ===
+
+=== lint check files list start ===
+=== lint check files list end ===
+
+
+=========== Lint check end ==============
