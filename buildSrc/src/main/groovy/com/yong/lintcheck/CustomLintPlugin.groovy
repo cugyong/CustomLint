@@ -27,6 +27,6 @@ class CustomLintPlugin implements Plugin<Project> {
 
 class LintConfig {
     def lintCheckFileType = ""
-    def lintReportAll = false
+    def lintReportAll = true
     def forbidHook = false
 }

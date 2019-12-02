@@ -1,4 +1,5 @@
 import com.android.tools.lint.XmlReporter
+import com.android.utils.Pair
 import com.yong.lintcheck.LintToolClient
 import com.yong.lintrules.IssuesRegister
 import com.yong.lintcheck.LintTxtReporter
@@ -75,15 +76,14 @@ class LintCheckUtils {
              */
             writer.write("=== lint check files list start ===\n")
             List<File> lintCheckFileList = new ArrayList<>()
-            List<Integer> startIndex = new ArrayList<>()
-            List<Integer> endIndex = new ArrayList<>()
+            Map<String, Pair<Integer, Integer>> sections = new HashMap<>()
             getLintCheckFilesInfo(project, commitFileList, fileNamePostfix,
-                    lintCheckFileList, startIndex, endIndex)
+                    lintCheckFileList, sections)
             for (String str: lintCheckFileList){
                 writer.write(str)
                 writer.newLine()
             }
-            writer.write("=== lint check files list end ===\n")
+            writer.write("=== lint check files list end ===\n\n")
 
             /**
              * 开始扫描
@@ -96,11 +96,11 @@ class LintCheckUtils {
             //是否输出全部的扫描结果
             if (project.lintConfig != null && project.lintConfig.lintReportAll) {
                 File outputResult = new File("lint-check-result-all.xml")
-                def xmlReporter = new XmlReporter(cl, outputResult)
+                def xmlReporter = new XmlReporter(lintClient, outputResult)
                 flags.reporters.add(xmlReporter)
             }
 
-            def txtReporter = new LintTxtReporter(lintClient, lintResult, writer, startIndex, endIndex)
+            def txtReporter = new LintTxtReporter(lintClient, lintResult, writer, sections)
             flags.reporters.add(txtReporter)
 
             lintClient.run(new IssuesRegister(), lintCheckFileList)
@@ -140,11 +140,10 @@ class LintCheckUtils {
      *
      * @param filePath 文件路径
      * @param project Project对象
-     * @param startIndex 修改开始的下表数组
-     * @param endIndex 修改结束的下表数组
+     * @param sections 修改开始的位置和结束的位置
      */
     private static void getFileChangeStatus(String filePath, Project project,
-                                            List<Integer> startIndex, List<Integer> endIndex) {
+                                            Map<String, Pair<Integer, Integer>> sections) {
         try {
             String command = "git diff --unified=0 --ignore-blank-lines --ignore-all-space HEAD~1 HEAD " + filePath
             String changeInfo = command.execute(null, project.getRootDir()).text.trim()
@@ -167,17 +166,18 @@ class LintCheckUtils {
                         start = Integer.parseInt(startArray[0])
                         end = start + 1
                     }
-                    startIndex.add(start)
-                    endIndex.add(end)
+                    Pair<Integer, Integer> section = new Pair<>(start, end)
+                    sections.put(getFileLastName(filePath), section)
                 } catch (NumberFormatException e) {
                     e.printStackTrace()
-                    startIndex.add(0)
-                    endIndex.add(0)
+                    Pair<Integer, Integer> section = new Pair<>(0, 0)
+                    sections.put(getFileLastName(filePath), section)
                 }
-
             }
         } catch (Exception e) {
             e.printStackTrace()
+            Pair<Integer, Integer> section = new Pair<>(0, 0)
+            sections.put(getFileLastName(filePath), section)
         }
     }
 
@@ -198,25 +198,37 @@ class LintCheckUtils {
     }
 
     /**
+     * 获取文件的名字，不包含路径
+     * @param filePath
+     * @return
+     */
+    static String getFileLastName(String filePath){
+        if (filePath != null && filePath.contains('/')){
+            int start = filePath.lastIndexOf('/')
+            return filePath.substring(start + 1)
+        }else {
+            return filePath
+        }
+    }
+
+    /**
      * 获取需要lint check的文件以及每个文件的修改行号
      * @param project
      * @param commitFileList
      * @param fileNamePostfix
      * @param lintCheckFileList
-     * @param startIndex
-     * @param endIndex
+     * @param sections
      */
     private static void getLintCheckFilesInfo(Project project,
                                               List<String> commitFileList,
                                               List<String> fileNamePostfix,
                                               List<File> lintCheckFileList,
-                                              List<Integer> startIndex,
-                                              List<Integer> endIndex){
+                                              Map<String, Pair<Integer, Integer>> sections){
         for (String fileName : commitFileList) {
             if (isMatchFile(fileNamePostfix, fileName)) {
                 File file = new File(fileName)
                 lintCheckFileList.add(file)
-                getFileChangeStatus(fileName, project, startIndex, endIndex)
+                getFileChangeStatus(fileName, project, sections)
             }
         }
     }

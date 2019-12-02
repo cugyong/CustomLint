@@ -2,9 +2,18 @@ package com.yong.lintcheck
 
 import com.android.annotations.NonNull
 import com.android.annotations.Nullable
-import com.android.tools.lint.*
+import com.android.tools.lint.LintCliClient
+import com.android.tools.lint.LintStats
+import com.android.tools.lint.Main
+import com.android.tools.lint.Reporter
+import com.android.tools.lint.Warning
 import com.android.tools.lint.client.api.IssueRegistry
-import com.android.tools.lint.detector.api.*
+import com.android.tools.lint.detector.api.Issue
+import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.Position
+import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.TextFormat
+import com.android.utils.Pair
 import com.android.utils.SdkUtils
 import com.google.common.base.Splitter
 
@@ -16,16 +25,19 @@ class LintTxtReporter extends Reporter {
 
     private Writer writer
 
-    private List<Integer> startLines
-    private List<Integer> endLines
+    /**
+     * key: 文件名
+     * pair: 第一个值为文件改动起始位置，第二个值为结束位置
+     */
+    private Map<String, Pair<Integer, Integer>> mSections;
 
     public int issueNumber = 0
 
-    protected LintTxtReporter(@NonNull LintCliClient client, File output, Writer writer, List<Integer> start, List<Integer> end) {
+    protected LintTxtReporter(@NonNull LintCliClient client, File output,
+                              Writer writer, Map<String, Pair<Integer, Integer>> sections) {
         super(client, output)
         this.writer = writer
-        this.startLines = start
-        this.endLines = end
+        mSections = sections
     }
 
     @Override
@@ -42,34 +54,30 @@ class LintTxtReporter extends Reporter {
             }
         } else {
             Issue lastIssue = null
-            boolean isBetweenNewLines
             int lineNo
             for (Warning warning : issues) {
-                isBetweenNewLines = false
 
                 //输出的行号与文件中对应的行号相差1,所以这里进行加1操作
                 lineNo = warning.line + 1
 
-                /*
-                 * 1.找出扫描结果的行号是否在修改代码之间
-                 */
-                for (int i = 0; i < startLines.size(); i++) {
-                    if (lineNo >= startLines.get(i) && lineNo < endLines.get(i)) {
-                        //println("w line " + lineNo + " " + startLines.get(i) + " " + endLines.get(i))
-                        isBetweenNewLines = true
-                        break
+                if (mSections != null){
+
+                    String fileName = LintCheckUtils.getFileLastName(warning.path)
+                    if (mSections.containsKey(fileName)){
+                        /*
+                     * 找出扫描结果的行号是否在修改代码之间
+                     * 如果Lint扫描到的Issue不在修改的范围之内,结束这次循环
+                     */
+                        Pair<Integer, Integer> section = mSections.get(fileName)
+                        println(section.first + "," + section.second)
+                        if (lineNo < section.first || lineNo >= section.second){
+                            continue
+                        }
                     }
                 }
 
                 /*
-                 * 2.如果Lint扫描到的Issue不在修改的范围之内,结束这次循环
-                 */
-                if (!isBetweenNewLines) {
-                    continue
-                }
-
-                /*
-                 * 3.Lint扫描的Issue在修改的范围内,将扫描结果写入文件
+                 * Lint扫描的Issue在修改的范围内,将扫描结果写入文件
                  */
                 if (warning.issue != lastIssue) {
                     explainIssue(output, lastIssue)
