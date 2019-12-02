@@ -3,8 +3,8 @@ apply plugin: 'java-library'
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    implementation 'com.android.tools.lint:lint-api:26.3.2'
-    implementation 'com.android.tools.lint:lint-checks:26.3.2'
+    compileOnly 'com.android.tools.lint:lint-api:26.3.2'
+    compileOnly 'com.android.tools.lint:lint-checks:26.3.2'
 }
 
 jar {
