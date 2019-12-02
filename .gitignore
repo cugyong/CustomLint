@@ -10,3 +10,4 @@
 /captures
 .externalNativeBuild
 lint-check-result.txt
+lint-check-result-all.xml
