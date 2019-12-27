@@ -2,6 +2,6 @@
 
 echo "post-commit started"
 
-./gradlew lintCheck
+gradlew lintCheck
 
 echo "post-commit finished"

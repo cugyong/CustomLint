@@ -7,7 +7,7 @@
 #
 # To enable this hook, rename this file to "pre-commit".
 
-./gradlew lintCheck
+gradlew lintCheck
 exit 0
 
 if git rev-parse --verify HEAD >/dev/null 2>&1

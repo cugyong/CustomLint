@@ -1,0 +1,6 @@
+1、无论是windows还是mac都必须配置ANDROID_HOME环境变量，因为Lint需要用到。
+ANDROID_HOME设置举例: ANDROID_HOME=C:\Users\xiayong\AppData\Local\Android\Sdk
+
+2、windows环境下想要运行chmod命令改变文件的读写权限，需要按照如下操作：
+2.1、安装Cygwin64;
+2.2、配置cygwin64环境变量，比如path=C:\cygwin64\bin;
